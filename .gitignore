@@ -1,0 +1,10 @@
+.idea/
+.ganache_data/
+.DS_Store
+/node_modules/
+
+# ipfs 
+.ipfs_data
+
+# env.local
+.env.local

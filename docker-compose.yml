@@ -1,0 +1,52 @@
+version: "3.7"
+
+services:
+  ipfs:
+    image: ipfs/go-ipfs:latest
+    ports:
+      - "4501:4001"
+      - "4503:4003"
+      - "5501:5001"
+      - "8580:8080"
+    volumes:
+      - ${PWD}/.ipfs_data:/data/ipfs
+    environment:
+      - IPFS_PROFILE=server
+    depends_on: 
+      - webrtc
+    entrypoint:
+      - /sbin/tini
+      - --
+      - /usr/local/bin/start_ipfs
+      - daemon
+      - --migrate=true
+
+  ganache:
+    image: trufflesuite/ganache-cli
+    volumes:
+      - ./.ganache_data:/ganache_data
+    entrypoint:
+      - node
+      - /app/ganache-core.docker.cli.js
+      - --deterministic
+      - --blockTime=$BLOCKTIME
+      - --db=/ganache_data
+      - --mnemonic=$MNEMONIC
+      - --networkId=$NETWORK_ID
+      - --gasPrice=5e9
+    ports:
+      - "7745:8545"
+
+  webrtc:
+    image: "node:13"
+    ports: 
+      - "9090:9090"
+    user: "node"
+    entrypoint: 
+      - /usr/local/bin/npx 
+      - --no-install
+      - -p
+      - libp2p-webrtc-star 
+      - -c 
+      - "star-signal --port=9090 --host=0.0.0.0"
+  

@@ -1,0 +1,13 @@
+{
+  "name": "DuFund",
+  "version": "0.0.1",
+  "description": "decentralized sexual harassment reporting app",
+  "repository": "https://github.com/behnamt/Soot.git",
+  "author": "Behnam Tehrani",
+  "license": "MIT",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "devDependencies": {
+    "lerna": "^3.22.1"
+  }
+}

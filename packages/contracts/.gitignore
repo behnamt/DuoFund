@@ -1,0 +1,10 @@
+.env.local
+package-lock.json
+
+/node_modules
+/build
+
+.openzeppelin/.session
+.openzeppelin/dev-*.json
+.openzeppelin/.lock
+.openzeppelin/goerli.json
