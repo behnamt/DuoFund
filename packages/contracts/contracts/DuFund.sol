@@ -40,23 +40,24 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
     // Core public functions
     // ------------------------------------------------------------
     function createCF(
+        uint256 tokenID,
         string memory CID,
         uint256 target_,
         uint256 expiryDate_,
         uint256 gweiPerToken_
     ) external {
         // mint ERC721 token
-        _safeMint(msg.sender, nextTokenID);
+        _safeMint(msg.sender, tokenID);
 
         // set token URI
-        _setTokenURI(nextTokenID, CID);
+        _setTokenURI(tokenID, CID);
 
         // create struct for mappings
         CF memory cf =
             CF(msg.sender, target_, expiryDate_, gweiPerToken_, false, false);
-        tokenIDtoCF[nextTokenID] = cf;
+        tokenIDtoCF[tokenID] = cf;
         address tokenAddress = createClone(deployedDuFundToken);
-        tokenIDtoDeployedAddress[nextTokenID] = tokenAddress;
+        tokenIDtoDeployedAddress[tokenID] = tokenAddress;
 
         // instanciate a DuFundToken
         DuFundToken tokenInstance = DuFundToken(tokenAddress);
@@ -144,26 +145,14 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
         cf.isClosed = true;
         tokenIDtoCF[tokenID] = cf;
     }
-
     // ------------------------------------------------------------
-    // View functions
+    // Public View functions
     // ------------------------------------------------------------
-    function getTokenID() public view returns (uint256) {
-        return nextTokenID;
-    }
-
-    function getRaisedMoeny(uint256 tokenID) public view returns (uint256) {
-        return tokenIDtoBalance[tokenID];
-    }
-
-    function getInstanceAddress(uint256 tokenID) public view returns (address) {
-        return tokenIDtoDeployedAddress[tokenID];
-    }
-
     function getCF(uint256 tokenID)
         public
         view
         returns (
+            address creator,
             uint256 target,
             uint256 expiryDate,
             uint256 gweiPerToken,
@@ -174,6 +163,7 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
         CF memory cf = tokenIDtoCF[tokenID];
         require(cf.expiryDate != 0, "cannot find CF");
         return (
+            cf.creator,
             cf.target,
             cf.expiryDate,
             cf.gweiPerToken,
@@ -182,12 +172,27 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
         );
     }
 
-    function getBalance(uint256 tokenID) public view returns (uint256 balance) {
+    // ------------------------------------------------------------
+    // External View functions
+    // ------------------------------------------------------------
+    function getTokenID() external view returns (uint256) {
+        return nextTokenID;
+    }
+
+    function getRaisedMoeny(uint256 tokenID) external view returns (uint256) {
         return tokenIDtoBalance[tokenID];
     }
 
+    function getMyDonation(uint256 tokenID) external view returns (uint256) {
+        return tokenIDtoInvestorDonation[tokenID][msg.sender];
+    }
+
+    function getInstanceAddress(uint256 tokenID) external view returns (address) {
+        return tokenIDtoDeployedAddress[tokenID];
+    }
+
     function getTokenAmount(uint256 tokenID)
-        public
+        external
         view
         returns (uint256 amount)
     {

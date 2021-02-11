@@ -39,22 +39,23 @@ describe('DuFund Contract', () => {
     });
     describe('creating a new CF', () => {
       it('should mint a new token and increase tokenID', async () => {
-        await duFundInstance.createCF('/link', 1, Date.now(), 200, { from: Guy });
+        let tokenID = await duFundInstance.getTokenID({ from: Deployer });
+        await duFundInstance.createCF(tokenID, '/link', 1, Date.now(), 200, { from: Guy });
         const guyBalance = await duFundInstance.balanceOf(Guy, { from: Guy });
-        const tokenID = await duFundInstance.getTokenID({ from: Guy });
+        tokenID = await duFundInstance.getTokenID({ from: Guy });
         const tokenURI = await duFundInstance.tokenURI(1, { from: Guy });
-        expect(new BN(guyBalance).toString()).toBe("1");
-        expect(new BN(tokenID).toString()).toBe("2");
+        expect(guyBalance.toString()).toBe("1");
+        expect(tokenID.toString()).toBe("2");
         expect(tokenURI).toBe("/link");
       });
       it('should mint a new token and set mappings', async () => {
         const expiryDate = Date.now();
-        await duFundInstance.createCF('/link', 1, expiryDate, 200, { from: Guy });
+        await duFundInstance.createCF(1, '/link', 1, expiryDate, 200, { from: Guy });
         const cf = await duFundInstance.getCF(1);
 
-        expect(new BN(cf.target).toString()).toBe('1');
-        expect(new BN(cf.expiryDate).toNumber()).toBe(expiryDate);
-        expect(new BN(cf.gweiPerToken).toNumber()).toBe(200);
+        expect(cf.target.toString()).toBe('1');
+        expect(cf.expiryDate.toNumber()).toBe(expiryDate);
+        expect(cf.gweiPerToken.toNumber()).toBe(200);
         expect(cf.isCancelled).toBe(false);
       });
       it('should not be able to retreive non-existing CF', async () => {
@@ -63,28 +64,28 @@ describe('DuFund Contract', () => {
     });
     describe('cancelling/closing a CF', () => {
       it('should cancel a CF', async () => {
-        await duFundInstance.createCF('/link', 1000, now(), 200, { from: Guy });
+        await duFundInstance.createCF(1, '/link', 1000, now(), 200, { from: Guy });
         await duFundInstance.cancelCF(1, { from: Guy });
         const cf = await duFundInstance.getCF(1);
         expect(cf.isCancelled).toBe(true);
       });
       it('should close a CF', async () => {
-        await duFundInstance.createCF('/link', 1000, now(), 200, { from: Guy });
+        await duFundInstance.createCF(1, '/link', 1000, now(), 200, { from: Guy });
         await duFundInstance.donate(1, { from: Gal, value: 1500 });
         await duFundInstance.closeCF(1, { from: Guy });
         const cf = await duFundInstance.getCF(1);
         expect(cf.isClosed).toBe(true);
       });
       it('should  revert cancel a CF if not the creator', async () => {
-        await duFundInstance.createCF('/link', 1000, now(), 200, { from: Guy });
+        await duFundInstance.createCF(1, '/link', 1000, now(), 200, { from: Guy });
         await expectRevert(duFundInstance.cancelCF(1, { from: Gal }), "only creator can execute");
       });
       it('should  revert close a CF if not the creator', async () => {
-        await duFundInstance.createCF('/link', 1000, now(), 200, { from: Guy });
+        await duFundInstance.createCF(1, '/link', 1000, now(), 200, { from: Guy });
         await expectRevert(duFundInstance.closeCF(1, { from: Gal }), "only creator can execute");
       });
       it('should  revert close a CF if target not reached', async () => {
-        await duFundInstance.createCF('/link', 1000, now(), 200, { from: Guy });
+        await duFundInstance.createCF(1, '/link', 1000, now(), 200, { from: Guy });
         await expectRevert(duFundInstance.closeCF(1, { from: Guy }), "target is not reached");
       });
     });
@@ -93,35 +94,35 @@ describe('DuFund Contract', () => {
         await expectRevert(duFundInstance.donate(2), "token does not exists");
       });
       it.skip('should revert for cancelled token', async () => {
-        await duFundInstance.createCF('/link', 1, now(), 200, { from: Guy });
+        await duFundInstance.createCF(1, '/link', 1, now(), 200, { from: Guy });
         // cancel 1
         await expectRevert(duFundInstance.donate(1), "CF is cancelled");
       });
       it('should increase FC\'s balance', async () => {
-        await duFundInstance.createCF('/link', 1, convertTimeToSeconds(tomorrowExpiryDate), 200, { from: Guy });
+        await duFundInstance.createCF(1, '/link', 1, convertTimeToSeconds(tomorrowExpiryDate), 200, { from: Guy });
         await duFundInstance.donate(1, { value: 200, from: Gal });
-        const balance = await duFundInstance.getBalance(1);
+        const balance = await duFundInstance.getRaisedMoeny(1);
         expect(new BN(balance).toNumber()).toBe(200);
       });
       it('should mint 2 token', async () => {
-        await duFundInstance.createCF('/link', 1, convertTimeToSeconds(tomorrowExpiryDate), 200, { from: Guy });
+        await duFundInstance.createCF(1, '/link', 1, convertTimeToSeconds(tomorrowExpiryDate), 200, { from: Guy });
         await duFundInstance.donate(1, { value: 400, from: Gal });
         const balance = await duFundInstance.getTokenAmount(1, { from: Gal });
         expect(new BN(balance).toNumber()).toBe(2);
         await expectRevert(duFundInstance.donate(2, { value: 200, from: Gal }), 'token does not exist');
       });
       it('should not mint since CF has not reached the target', async () => {
-        await duFundInstance.createCF('/link', 1, convertTimeToSeconds(yesterdayExpiryDate), 200, { from: Guy });
+        await duFundInstance.createCF(1, '/link', 1, convertTimeToSeconds(yesterdayExpiryDate), 200, { from: Guy });
         await expectRevert(duFundInstance.donate(1, { value: 200, from: Gal }), 'CF is expired');
       });
       it('should fail if isClosed', async () => {
-        await duFundInstance.createCF('/link', 200, convertTimeToSeconds(tomorrowExpiryDate), 200, { from: Guy });
+        await duFundInstance.createCF(1, '/link', 200, convertTimeToSeconds(tomorrowExpiryDate), 200, { from: Guy });
         await duFundInstance.donate(1, { value: 400, from: Gal });
         await duFundInstance.closeCF(1, { from: Guy });
         await expectRevert(duFundInstance.donate(1, { from: Pete }), "CF is cancelled or closed");
       });
       it('should fail if isCancelled', async () => {
-        await duFundInstance.createCF('/link', 200, convertTimeToSeconds(tomorrowExpiryDate), 200, { from: Guy });
+        await duFundInstance.createCF(1, '/link', 200, convertTimeToSeconds(tomorrowExpiryDate), 200, { from: Guy });
         await duFundInstance.donate(1, { value: 400, from: Gal });
         await duFundInstance.cancelCF(1, { from: Guy });
         await expectRevert(duFundInstance.donate(1, { from: Pete }), "CF is cancelled or closed");
@@ -131,7 +132,7 @@ describe('DuFund Contract', () => {
       beforeEach(async () => {
         const twoSecondsIntoTheFuture = now() + 2;
 
-        await duFundInstance.createCF('/link', 400, twoSecondsIntoTheFuture, 200, { from: Guy });
+        await duFundInstance.createCF(1, '/link', 400, twoSecondsIntoTheFuture, 200, { from: Guy });
       });
       it('fund and withdraw should work', async (done) => {
         const tracker = await balance.tracker(Gal, 'wei');
@@ -212,7 +213,7 @@ describe('DuFund Contract', () => {
       beforeEach(async () => {
         const twoSecondsIntoTheFuture = now() + 2;
 
-        await duFundInstance.createCF('/link', 1000, twoSecondsIntoTheFuture, 200, { from: Guy });
+        await duFundInstance.createCF(1, '/link', 1000, twoSecondsIntoTheFuture, 200, { from: Guy });
       });
       it('withdraw by creator should work', async () => {
         const tracker = await balance.tracker(Guy, 'wei');
