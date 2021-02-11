@@ -91,13 +91,18 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
             cf.expiryDate < now && cf.target > tokenIDtoBalance[tokenID],
             "CF is still going"
         );
+
+        uint moneyAmount =  tokenIDtoInvestorDonation[tokenID][recipient];
+        // clear mappings
+        tokenIDtoBalance[tokenID] = tokenIDtoBalance[tokenID] - moneyAmount;
+        tokenIDtoInvestorDonation[tokenID][msg.sender] = 0;
         // burn ERC20 token
         DuFundToken tokenInstance =
             DuFundToken(tokenIDtoDeployedAddress[tokenID]);
         uint256 tokenAmount = tokenInstance.balanceOf(msg.sender);
         tokenInstance.burn(msg.sender, tokenAmount);
         // send back the money
-        (bool success, ) = recipient.call{ value: tokenIDtoInvestorDonation[tokenID][recipient] }("");
+        (bool success, ) = recipient.call{ value: moneyAmount }("");
         require(success, "Address: unable to send value, recipient may have reverted");
     }
 
@@ -111,7 +116,7 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
         );
         require(cf.creator == msg.sender, "only creator can execute");
 
-        (bool success, ) = recipient.call{ value: 2 }("");
+        (bool success, ) = recipient.call{ value: tokenIDtoBalance[tokenID] }("");
         require(success, "Address: unable to send value, recipient may have reverted");
     }
 
