@@ -11,8 +11,8 @@ contract DuFundToken is ERC20 {
     }
 
     // setting storage should be done not in constructor
-    function init(address owner_) external {
-        contractOwner = owner_;
+    function init() external {
+        contractOwner = msg.sender;
     }
 
     // ------------------------------------------------------------
@@ -20,6 +20,10 @@ contract DuFundToken is ERC20 {
     // ------------------------------------------------------------
     function mint(address to, uint256 amount) onlyOwner external {
         _mint(to, amount);
+    }
+
+    function burn(address to, uint256 amount) onlyOwner external {
+        _burn(to, amount);
     }
 
     modifier onlyOwner() {

@@ -9,6 +9,7 @@ describe('DuFund Contract', () => {
 
   beforeEach(async () => {
     duFundTokenIns = await DuFundToken.new({ from: Deployer });
+    duFundTokenIns.init({ from: Deployer });
   });
 
   describe('DuFundToken', () => {
