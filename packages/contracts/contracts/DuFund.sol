@@ -14,7 +14,7 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
         address creator;
         uint256 target;
         uint256 expiryDate;
-        uint256 gweiPerToken;
+        uint256 weiPerToken;
         bool isCancelled;
         bool isClosed;
     }
@@ -44,7 +44,7 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
         string memory CID,
         uint256 target_,
         uint256 expiryDate_,
-        uint256 gweiPerToken_
+        uint256 weiPerToken_
     ) external {
         // mint ERC721 token
         _safeMint(msg.sender, tokenID);
@@ -54,7 +54,7 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
 
         // create struct for mappings
         CF memory cf =
-            CF(msg.sender, target_, expiryDate_, gweiPerToken_, false, false);
+            CF(msg.sender, target_, expiryDate_, weiPerToken_, false, false);
         tokenIDtoCF[tokenID] = cf;
         address tokenAddress = createClone(deployedDuFundToken);
         tokenIDtoDeployedAddress[tokenID] = tokenAddress;
@@ -78,7 +78,7 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
 
         tokenIDtoBalance[tokenID] = tokenIDtoBalance[tokenID].add(msg.value);
         tokenIDtoInvestorDonation[tokenID][msg.sender] = msg.value;
-        uint256 tokenAmount = msg.value.div(cf.gweiPerToken);
+        uint256 tokenAmount = msg.value.div(cf.weiPerToken);
         DuFundToken tokenInstance =
             DuFundToken(tokenIDtoDeployedAddress[tokenID]);
         tokenInstance.mint(msg.sender, tokenAmount);
@@ -155,7 +155,7 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
             address creator,
             uint256 target,
             uint256 expiryDate,
-            uint256 gweiPerToken,
+            uint256 weiPerToken,
             bool isCancelled,
             bool isClosed
         )
@@ -166,7 +166,7 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
             cf.creator,
             cf.target,
             cf.expiryDate,
-            cf.gweiPerToken,
+            cf.weiPerToken,
             cf.isCancelled,
             cf.isClosed
         );

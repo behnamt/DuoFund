@@ -29,3 +29,5 @@
 Look through the frontend [README](app/README.md)
 
 #### TODO
+[] restrict more than 1 year expiryDate
+[] global setup for core/jest for ipfs and oritDB 
