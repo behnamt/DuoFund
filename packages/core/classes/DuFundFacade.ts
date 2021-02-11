@@ -12,12 +12,12 @@ class DuFundFacade {
   public contract!: Contract;
 
   private readonly web3: Web3;
-  private readonly account: Account;
+  private readonly account: string;
 
-  constructor(web3: Web3, _account: Account, contractAddress: string) {
+  constructor(web3: Web3, _account: string, contractAddress: string) {
     this.web3 = web3;
     this.account = _account;
-    this.contract = this.contractInstance(_account.address, contractAddress);
+    this.contract = this.contractInstance(_account, contractAddress);
   }
 
   private contractInstance(account: string, contractAddress: string): Contract {
@@ -48,7 +48,7 @@ class DuFundFacade {
 
     const hash = await DBInstance.put({
       id,
-      creator: this.account.address,
+      creator: this.account,
       creationDate: convertMillisecondsToSeconds(Date.now()),
       expiryDate: convertMillisecondsToSeconds(expiryDate),
       target,

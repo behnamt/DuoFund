@@ -20,7 +20,7 @@ async function startNode(): Promise<IPFS> {
         Swarm: [
           '/ip4/127.0.0.1/tcp/9090/wss/p2p-webrtc-star',
           // These are public webrtc-star servers
-          // '/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star',
+          '/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star',
           // '/dns4/wrtc-star2.sjc.dwebops.pub/tcp/443/wss/p2p-webrtc-star',
         ],
       },
