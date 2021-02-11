@@ -50,17 +50,18 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
 
         // set token URI
         _setTokenURI(nextTokenID, CID);
-        
+
         // create struct for mappings
-        CF memory cf = CF(msg.sender, target_, expiryDate_, gweiPerToken_, false, false);
+        CF memory cf =
+            CF(msg.sender, target_, expiryDate_, gweiPerToken_, false, false);
         tokenIDtoCF[nextTokenID] = cf;
         address tokenAddress = createClone(deployedDuFundToken);
         tokenIDtoDeployedAddress[nextTokenID] = tokenAddress;
-        
+
         // instanciate a DuFundToken
         DuFundToken tokenInstance = DuFundToken(tokenAddress);
         tokenInstance.init();
-        
+
         // go to the next ID
         increaseTokenID();
     }
@@ -82,7 +83,10 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
         tokenInstance.mint(msg.sender, tokenAmount);
     }
 
-    function withdrawDonatorPayments(address payable recipient, uint256 tokenID) external nonReentrant {
+    function withdrawDonatorPayments(address payable recipient, uint256 tokenID)
+        external
+        nonReentrant
+    {
         require(_exists(tokenID), "token does not exists");
         require(recipient == msg.sender, "not the same as sender");
         CF memory cf = tokenIDtoCF[tokenID];
@@ -92,7 +96,7 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
             "CF is still going"
         );
 
-        uint moneyAmount =  tokenIDtoInvestorDonation[tokenID][recipient];
+        uint256 moneyAmount = tokenIDtoInvestorDonation[tokenID][recipient];
         // clear mappings
         tokenIDtoBalance[tokenID] = tokenIDtoBalance[tokenID] - moneyAmount;
         tokenIDtoInvestorDonation[tokenID][msg.sender] = 0;
@@ -102,35 +106,40 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
         uint256 tokenAmount = tokenInstance.balanceOf(msg.sender);
         tokenInstance.burn(msg.sender, tokenAmount);
         // send back the money
-        (bool success, ) = recipient.call{ value: moneyAmount }("");
-        require(success, "Address: unable to send value, recipient may have reverted");
+        (bool success, ) = recipient.call{value: moneyAmount}("");
+        require(
+            success,
+            "Address: unable to send value, recipient may have reverted"
+        );
     }
 
-
-    function withdrawCreatorPayments(address payable recipient, uint256 tokenID) external nonReentrant
+    function withdrawCreatorPayments(address payable recipient, uint256 tokenID)
+        external
+        nonReentrant
     {
         CF memory cf = tokenIDtoCF[tokenID];
-        require(
-            cf.target < tokenIDtoBalance[tokenID] && cf.isClosed,
-            "you haven't reached the target yet"
-        );
+        require(cf.isClosed, "CF is not closed");
         require(cf.creator == msg.sender, "only creator can execute");
+        require(recipient == msg.sender, "only creator can execute");
 
-        (bool success, ) = recipient.call{ value: tokenIDtoBalance[tokenID] }("");
-        require(success, "Address: unable to send value, recipient may have reverted");
+        (bool success, ) = recipient.call{value: tokenIDtoBalance[tokenID]}("");
+        require(
+            success,
+            "Address: unable to send value, recipient may have reverted"
+        );
     }
 
     function cancelCF(uint256 tokenID) public {
         CF memory cf = tokenIDtoCF[tokenID];
-        require(cf.creator == msg.sender , 'only creator can execute');
+        require(cf.creator == msg.sender, "only creator can execute");
         cf.isCancelled = true;
-        tokenIDtoCF[tokenID] = cf; 
+        tokenIDtoCF[tokenID] = cf;
     }
 
     function closeCF(uint256 tokenID) public {
         CF memory cf = tokenIDtoCF[tokenID];
-        require(cf.creator == msg.sender , 'only creator can execute');
-        require(cf.target < tokenIDtoBalance[tokenID] , 'target is not reached');
+        require(cf.creator == msg.sender, "only creator can execute");
+        require(cf.target < tokenIDtoBalance[tokenID], "target is not reached");
 
         cf.isClosed = true;
         tokenIDtoCF[tokenID] = cf;
@@ -142,6 +151,7 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
     function getTokenID() public view returns (uint256) {
         return nextTokenID;
     }
+
     function getRaisedMoeny(uint256 tokenID) public view returns (uint256) {
         return tokenIDtoBalance[tokenID];
     }
@@ -163,7 +173,13 @@ contract DuFund is ERC721, CloneFactory, ReentrancyGuard {
     {
         CF memory cf = tokenIDtoCF[tokenID];
         require(cf.expiryDate != 0, "cannot find CF");
-        return (cf.target, cf.expiryDate, cf.gweiPerToken, cf.isCancelled, cf.isClosed);
+        return (
+            cf.target,
+            cf.expiryDate,
+            cf.gweiPerToken,
+            cf.isCancelled,
+            cf.isClosed
+        );
     }
 
     function getBalance(uint256 tokenID) public view returns (uint256 balance) {

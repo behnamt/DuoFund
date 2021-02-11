@@ -138,15 +138,15 @@ describe('DuFund Contract', () => {
         await duFundInstance.donate(1, { value: 200, from: Gal });
         const balanceAfterDonation = await tracker.get();
         const CFBalanceAfterDonation = await duFundInstance.getRaisedMoeny(1);
-        
+
         setTimeout(async () => {
           const withdrawReceipt = await duFundInstance.withdrawDonatorPayments(Gal, 1, { from: Gal });
-          
+
           const balanceAfterWithdraw = await tracker.get();
           const balanceUsed = new BN(withdrawReceipt.receipt.gasUsed);
           const expected = balanceAfterDonation.sub(balanceUsed.mul(new BN(GAS_PRICE))).add(new BN(200));
           const CFBalanceAfterWithdraw = await duFundInstance.getRaisedMoeny(1);
-   
+
           expect(CFBalanceAfterWithdraw.add(new BN(200)).toString()).toStrictEqual(CFBalanceAfterDonation.toString());
           expect(balanceAfterWithdraw).toStrictEqual(expected);
           done();
@@ -205,6 +205,39 @@ describe('DuFund Contract', () => {
           expect(balanceAfterWithdraw).toStrictEqual(expected);
           done();
         }, 3000);
+      });
+    });
+
+    describe('withdraw money by creator', () => {
+      beforeEach(async () => {
+        const twoSecondsIntoTheFuture = now() + 2;
+
+        await duFundInstance.createCF('/link', 1000, twoSecondsIntoTheFuture, 200, { from: Guy });
+      });
+      it('withdraw by creator should work', async () => {
+        const tracker = await balance.tracker(Guy, 'wei');
+        await duFundInstance.donate(1, { value: 1000, from: Gal });
+        await duFundInstance.donate(1, { value: 500, from: Pete });
+        await duFundInstance.closeCF(1, { from: Guy });
+        const balanceBeforeWithdraw = await tracker.get();
+        const withdrawReceipt = await duFundInstance.withdrawCreatorPayments(Guy, 1, { from: Guy });
+        const balanceUsed = new BN(withdrawReceipt.receipt.gasUsed);
+        const balanceAfterWithdraw = await tracker.get();
+        const expected = balanceBeforeWithdraw.sub(balanceUsed.mul(new BN(GAS_PRICE))).add(new BN(1500));
+        
+        expect(balanceAfterWithdraw).toStrictEqual(expected);
+      });
+      it('should fail to withdraw by creator if CF is not closed', async () => {
+        await duFundInstance.donate(1, { value: 2500, from: Pete });
+        await expectRevert(duFundInstance.withdrawCreatorPayments(Guy, 1, { from: Guy }),"CF is not closed");
+      });
+      it('should fail to withdraw if not the creator', async () => {
+        await duFundInstance.donate(1, { value: 2500, from: Pete });
+        await duFundInstance.closeCF(1, { from: Guy });
+
+        await expectRevert(duFundInstance.withdrawCreatorPayments(Gal, 1, { from: Guy }),"only creator can execute");
+        await expectRevert(duFundInstance.withdrawCreatorPayments(Guy, 1, { from: Gal }),"only creator can execute");
+        await expectRevert(duFundInstance.withdrawCreatorPayments(Pete, 1, { from: Gal }),"only creator can execute");
       });
     });
   });
