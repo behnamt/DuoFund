@@ -1,4 +1,5 @@
 export interface ICFStoring {
+  name: string;
   description: string;
   icon: string;
   image: string;

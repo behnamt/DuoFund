@@ -20,7 +20,7 @@ module.exports = {
   ],
   rules: {
     '@typescript-eslint/interface-name-prefix': 'off',
-    '@typescript-eslint/no-unused-vars': 'error',
+    '@typescript-eslint/no-unused-vars': 'warn',
     '@typescript-eslint/explicit-function-return-type': 'error',
     'import/extensions': 'off',
     'no-unused-vars': 'off',
