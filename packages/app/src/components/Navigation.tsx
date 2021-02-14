@@ -1,5 +1,6 @@
 import React from 'react';
 import { Switch, Route } from 'react-router-dom';
+import CreateProject from './Pages/CreateProject';
 import Home from './Pages/Home';
 import Project from './Pages/Project';
 import ProjectListings from './Pages/ProjectListings';
@@ -12,6 +13,9 @@ const Navigation = (): React.ReactElement => {
       </Route>
       <Route path="/projects">
         <ProjectListings />
+      </Route>
+      <Route path="/create">
+        <CreateProject />
       </Route>
       <Route path="/">
         <Home />
