@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import Web3 from 'web3';
 import WalletConnectProvider from '@walletconnect/web3-provider';
 import { IWeb3Context } from '../@types/IWeb3Context';
+import { HttpProvider } from 'web3-core';
 
 const web3Context = React.createContext<IWeb3Context>({
   isBrowserWallet: false,
@@ -33,27 +34,29 @@ const useWeb3Provider = (): IWeb3Context => {
     }
   };
 
-  const setBrowserWalletPublicKey = async (address: string): Promise<void> => {
-    if (!web3Instance) {
-      console.error('where is web3 instance?');
-    }
-    try {
-      const key = await provider.request({
-        method: 'eth_getEncryptionPublicKey',
-        params: [address], // you must have access to the specified account
-      });
-      setEncryptionPublicKey(key);
-    } catch (error) {
-      if (error.code === 4001) {
-        // EIP-1193 userRejectedRequest error
-      } else {
-        console.error(error);
-      }
-    }
-  };
+  // const setBrowserWalletPublicKey = async (address: string): Promise<void> => {
+  //   if (!web3Instance) {
+  //     console.error('where is web3 instance?');
+  //   }
+  //   try {
+  //     const key = await provider.request({
+  //       method: 'eth_getEncryptionPublicKey',
+  //       params: [address], // you must have access to the specified account
+  //     });
+  //     setEncryptionPublicKey(key);
+  //   } catch (error) {
+  //     if (error.code === 4001) {
+  //       // EIP-1193 userRejectedRequest error
+  //     } else {
+  //       console.error(error);
+  //     }
+  //   }
+  // };
 
   const getBrowserWalletAccount = async (_provider: any = provider): Promise<string[]> => {
-    return _provider.request({ method: 'eth_requestAccounts' });
+    const accounts = await _provider.request({ method: 'eth_requestAccounts' });
+
+    return accounts || _provider.accounts;
   };
 
   const connect = async (_provider: any = provider): Promise<void> => {
@@ -65,7 +68,7 @@ const useWeb3Provider = (): IWeb3Context => {
         setWeb3Instance(web3);
         _provider.on('accountsChanged', handleAccountsChanged);
         const accounts = await getBrowserWalletAccount(_provider);
-        setBrowserWalletPublicKey(accounts[0]);
+
         handleAccountsChanged(accounts);
       }
       setIsPending(false);

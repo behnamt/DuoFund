@@ -1,4 +1,4 @@
-import { Box, Container } from '@chakra-ui/react';
+import { Box, Center, Container } from '@chakra-ui/react';
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { useIpfs } from '../context/IPFS';
@@ -33,6 +33,6 @@ export const ContextAwareApp = (): React.ReactElement => {
       </BrowserRouter>
     </Box>
   ) : (
-    <span>Loading...</span>
+    <Center>Loading...</Center>
   );
 };

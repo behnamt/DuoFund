@@ -66,7 +66,7 @@ const AddProjectButton = (): React.ReactElement => {
   const [isLoginPending, setIsLoginPending] = useState<boolean>(false);
 
   const { enqueueSnackbar } = useSnackbar();
-  const { account, web3Instance, isBrowserWallet, connect, createAndConnectWalletConnectProvider } = useWeb3();
+  const { account, web3Instance, isBrowserWallet, createAndConnectWalletConnectProvider } = useWeb3();
   const { push } = useHistory();
 
   const tryToConnect = (): void => {
