@@ -6,7 +6,6 @@ import { DuFundProvider } from '../context/DuFund';
 import { IpfsProvider } from '../context/IPFS';
 import { OrbitDBProvider } from '../context/OrbitDB';
 import { ContextAwareApp } from './ContextAwarApp';
-import theme from '../theme';
 
 const Root = (): React.ReactElement => (
   <React.StrictMode>
@@ -14,8 +13,14 @@ const Root = (): React.ReactElement => (
       <DuFundProvider>
         <IpfsProvider>
           <OrbitDBProvider>
-            <SnackbarProvider maxSnack={3}>
-              <ChakraProvider theme={theme}>
+            <SnackbarProvider
+              maxSnack={3}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+            >
+              <ChakraProvider>
                 <ContextAwareApp />
               </ChakraProvider>
             </SnackbarProvider>

@@ -6,7 +6,8 @@ export interface IWeb3Context {
   isPending: boolean;
   web3Instance: Web3 | null;
   account: string | null;
-  connect: (account?: Account | string) => void;
+  connect: () => void;
   disconnect: () => void;
+  createAndConnectWalletConnectProvider: () => void;
   encryptionPublicKey: string | null;
 }

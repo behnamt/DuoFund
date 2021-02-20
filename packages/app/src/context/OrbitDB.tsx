@@ -25,11 +25,8 @@ const useOrbitDBProvider = (): IOrbitDBContext => {
   const { run: connectToDB, isPending }: AsyncState<DocumentStore<ICFStored>> = useAsync({
     deferFn: useCallback(async () => {
       await createInstance();
-      console.log('here');
 
       const database = await connect(process.env.REACT_APP_ORBIT_DB_INSTANCE!);
-      console.log(database);
-
       await database.load();
 
       return database;

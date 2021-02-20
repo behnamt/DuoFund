@@ -1,9 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import Web3 from 'web3';
+import WalletConnectProvider from '@walletconnect/web3-provider';
 import { IWeb3Context } from '../@types/IWeb3Context';
-
-//eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare let ethereum: any;
 
 const web3Context = React.createContext<IWeb3Context>({
   isBrowserWallet: false,
@@ -12,12 +10,14 @@ const web3Context = React.createContext<IWeb3Context>({
   account: null,
   connect: () => null,
   disconnect: () => null,
+  createAndConnectWalletConnectProvider: () => null,
   encryptionPublicKey: null,
 });
 
 const useWeb3 = (): IWeb3Context => useContext(web3Context);
 
 const useWeb3Provider = (): IWeb3Context => {
+  const [provider, setProvider] = useState<any>(null);
   const [web3Instance, setWeb3Instance] = useState<Web3 | null>(null);
   const [account, setAccount] = useState<string | null>(null);
   const [isBrowserWallet, setIsBrowserWallet] = useState<boolean>(false);
@@ -38,7 +38,7 @@ const useWeb3Provider = (): IWeb3Context => {
       console.error('where is web3 instance?');
     }
     try {
-      const key = await window.ethereum.request({
+      const key = await provider.request({
         method: 'eth_getEncryptionPublicKey',
         params: [address], // you must have access to the specified account
       });
@@ -52,22 +52,35 @@ const useWeb3Provider = (): IWeb3Context => {
     }
   };
 
-  const getBrowserWalletAccount = async (): Promise<string[]> => {
-    return window.ethereum.request({ method: 'eth_requestAccounts' });
+  const getBrowserWalletAccount = async (_provider: any = provider): Promise<string[]> => {
+    return _provider.request({ method: 'eth_requestAccounts' });
   };
 
-  const connect = async (): Promise<void> => {
-    if (isBrowserWallet) {
-      try {
-        setIsPending(true);
-        const accounts = await getBrowserWalletAccount();
+  const connect = async (_provider: any = provider): Promise<void> => {
+    try {
+      setIsPending(true);
+      if (_provider) {
+        const web3: Web3 = new Web3(_provider);
+        _provider.enable();
+        setWeb3Instance(web3);
+        _provider.on('accountsChanged', handleAccountsChanged);
+        const accounts = await getBrowserWalletAccount(_provider);
         setBrowserWalletPublicKey(accounts[0]);
         handleAccountsChanged(accounts);
-        setIsPending(false);
-      } catch (error) {
-        console.debug(error);
       }
+      setIsPending(false);
+    } catch (error) {
+      console.debug(error);
     }
+  };
+
+  const createAndConnectWalletConnectProvider = (): void => {
+    const provider_ = new WalletConnectProvider({
+      infuraId: process.env.REACT_APP_INFURA_KEY,
+    });
+    connect(provider_);
+
+    setProvider(provider_);
   };
 
   const disconnect = async (): Promise<void> => {
@@ -76,14 +89,8 @@ const useWeb3Provider = (): IWeb3Context => {
 
   useEffect((): void => {
     if (window.ethereum) {
-      const web3: Web3 = new Web3(ethereum);
-      window.ethereum.enable();
+      setProvider(window.ethereum);
       setIsBrowserWallet(true);
-      setWeb3Instance(web3);
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
-    } else {
-      const web3: Web3 = new Web3(new Web3.providers.WebsocketProvider(process.env.REACT_APP_ETHEREUM_NODE || ''));
-      setWeb3Instance(web3);
     }
   }, []);
 
@@ -95,6 +102,7 @@ const useWeb3Provider = (): IWeb3Context => {
     connect,
     disconnect,
     encryptionPublicKey,
+    createAndConnectWalletConnectProvider,
   };
 };
 

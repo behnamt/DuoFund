@@ -49,5 +49,6 @@ module.exports = {
       },
     ],
     'no-restricted-syntax': 'off',
+    'react/display-name': 'off',
   },
 };
